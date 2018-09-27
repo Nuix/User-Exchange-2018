@@ -1,0 +1,1 @@
+# Nuix Developer Community Update & What's new for Developers in 7.6
