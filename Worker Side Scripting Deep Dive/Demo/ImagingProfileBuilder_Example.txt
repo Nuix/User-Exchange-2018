@@ -1,0 +1,121 @@
+puts "Creating Imaging profile"
+
+# Get Builders
+builder = $utilities.getImagingProfileBuilder()
+excelBuilder = $utilities.getMicrosoftExcelConversionOptionsBuilder()
+ppBuilder = $utilities.getMicrosoftPowerPointConversionOptionsBuilder()
+wordBuilder = $utilities.getMicrosoftWordConversionOptionsBuilder()
+sstBuilder = $utilities.getSlipSheetTemplateBuilder()
+ruleBuilder = $utilities.getImagingProfileRuleBuilder()
+icBuilder = $utilities.getItemConditionBuilder()
+
+# Configure builders
+# Configure Excel conversion options
+excelBuilder
+	.withPrintHiddenRows(false)
+	.withPrintHiddenColumns(false)
+	.withPrintHiddenWorksheets('SHEET_VERY_HIDDEN')
+	.withPrintComments('PRINT_SHEETEND')
+	.withPrintNotes(false)
+	.withPaperSize('PAPER_Quarto')
+	.withPageOrientation('LANDSCAPE')
+	.withPageZoom('PERCENT_125')
+	.withFitToPagesTall(2)
+	.withFitToPagesWide(2)
+	.withWorksheetPrintArea('$A$1:$J$10')
+	.withPageNumberLimit(10)
+	.withPrintGridlines(false)
+	.withPrintHeadings(false)
+
+# Configure PowerPoint converstion options
+ppBuilder
+	.withPrintOutputType('PRINT_OUTPUT_SIX_SLIDE_HANDOUTS')
+	.withPrintHandoutOrder('PRINT_HANDOUT_HORIZONTAL_FIRST')
+	.withPrintHiddenSlides(false)
+	.withHideSlidesDateAndTime(false)
+	.withHideSlidesFooter(false)
+	.withHideSlidesSlideNumber(false)
+
+# Configure Word conversion options
+wordBuilder
+	.withShowMarkup(false)
+	.withShowComments(false)
+	.withShowInsertAndDeletions(false)
+	.withShowHiddenText(false)
+	.withRemoveHeader(false)
+	.withRemoveFooter(false)
+	.withFilterFieldCodes({'FILESIZE' => 'AS_IS', 'DATABASE' => 'BOTH', 'AUTHOR' => 'DELETE', 'COMMENTS' => 'CODE_STRIP_FORMATTING'})
+
+# Configure Slipsheet
+sstBuilder
+	.withName('Scripted Slipsheet')
+	.withDescription('Created via script')
+	.withTitleUseCustomText(true)
+	.withTitleCustomText('Hello world')
+	.withTitleUseCustomFont(true)
+	.withTitleCustomFontFamilyName('Courier')
+	.withTitleCustomFontSize(24)
+	.withTitleCustomTextBold(true)
+	.withTitleUseCustomImage(true)
+	.withTitleCustomImage('C:/Program Files/Nuix/Nuix RESTful Service/nuix.ico')
+	.withNoImage(false)
+	.withBodyUseCustomText(true)
+	.withBodyCustomText('Some custom body text')
+	.withUseCustomMetadataProfile(true)
+	.withCustomMetadataProfileName('Default')
+	.withDoNotDisplayFieldNames(true)
+	.withDoNotDisplayBlankValues(true)
+	.withBodyUseCustomFont(true)
+	.withBodyCustomFontFamilyName('Courier New')
+	.withBodyCustomFontSize(7)
+	.withBodyCustomTextBold(true)
+	.withBodyUseCustomLeftAlignment(true)
+	.withBodyCustomLeftAlignmentSize(123.0)
+	.withBodyCustomLeftAlignmentUnit('MM')
+	.withBodyUseCustomLineSpacing(true)
+	.withBodyCustomLineSpacing('DOUBLE')
+	.withUseCustomTemplateFile(true)
+	.withCustomTemplateFile('Contact.vm')
+	.withUseCustomVerticalAlignment(true)
+	.withCustomVerticalAlignment('BOTTOM')
+slipSheetTemplate = sstBuilder.build()
+
+# Configure imaging profile rule
+ruleBuilder
+	.withItemCondition(
+		icBuilder
+			.withMimeTypes(['application/vnd.sqlite-database'])
+			.withMimeTypeKinds(['database'])
+			.withFlags(['not_processed']).withTags(['tag123']).withMustMatch('ALL').build())
+	.withSituationCondition('PAGE_COUNT_EXCEEDS')
+	.withPageCount(6)
+	.withImagingContent('REPLACE_WITH_SLIP_SHEET')
+	.withSlipSheetTemplate(slipSheetTemplate)
+
+# Build the builders
+excelOptions = excelBuilder.build()
+ppOptions = ppBuilder.build()
+wordOptions = wordBuilder.build()
+rule = ruleBuilder.build()
+
+# Configure imaging profile
+builder
+	.withName('Scripted Imaging Profile')
+	.withDescription('Created via ProfileBuilderAPI')
+	.withMicrosoftExcelConversionOptions(excelOptions)
+	.withMicrosoftPowerPointConversionOptions(ppOptions)
+	.withMicrosoftWordConversionOptions(wordOptions)
+	.addSlipSheetTemplate(slipSheetTemplate)
+	.withFallbackSlipSheetTemplate(slipSheetTemplate) # this must be called after you add the slipsheet template
+	.addRule(rule)
+	.withEnableCache(true)
+	.withUseCustomCacheDirectory(true)
+	.withCustomCacheDirectory('C:/temp')
+	.withClearCacheOnCompletion(true)
+
+# Build and save profile
+profile = builder.build()
+profile.save()
+puts "Created Imaging profile"
+
+puts "Done!"
